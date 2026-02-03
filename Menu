@@ -1,21 +1,41 @@
--- inside your Menu script
-if not _G.AimLockInstance then
-    _G.AimLockInstance = {} -- store the aim lock data/functions
-end
+-- AimLock
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local RunService = game:GetService("RunService")
 
--- function to enable
-function _G.AimLockInstance:Enable()
-    self.Connection = game:GetService("RunService").RenderStepped:Connect(function()
-        if _G.AimLockActive then
-            -- your aim lock code here
+_G.AimLockActive = false
+
+-- Toggle function
+function AimLock()
+    RunService.RenderStepped:Connect(function()
+        if _G.AimLockActive and Mouse:IsButtonPressed(Enum.UserInputType.MouseButton2) then
+            local closestHead
+            local shortestDistance = math.huge
+
+            for i, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                    local head = player.Character.Head
+                    local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            closestHead = head
+                        end
+                    end
+                end
+            end
+
+            if closestHead then
+                -- Move mouse toward head
+                local camera = workspace.CurrentCamera
+                local headPos = camera:WorldToViewportPoint(closestHead.Position)
+                mousemoverel((headPos.X - Mouse.X) * 0.3, (headPos.Y - Mouse.Y) * 0.3) -- smoothing
+            end
         end
     end)
 end
 
--- function to disable
-function _G.AimLockInstance:Disable()
-    if self.Connection then
-        self.Connection:Disconnect()
-        self.Connection = nil
-    end
-end
+-- Run AimLock
+AimLock()
