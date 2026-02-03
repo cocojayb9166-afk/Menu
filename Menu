@@ -36,6 +36,5 @@ function AimLock()
         end
     end)
 end
-
 -- Run AimLock
 AimLock()
